@@ -70,7 +70,7 @@ ADMIN_IDS_STR = os.getenv("ADMIN_IDS", "7304865708")
 ADMIN_IDS = [int(x.strip()) for x in ADMIN_IDS_STR.split(",") if x.strip()]
 
 # Group Chat IDs (comma separated in env var)
-GROUP_CHAT_IDS_STR = os.getenv("GROUP_CHAT_IDS", "-1003008351067")
+GROUP_CHAT_IDS_STR = os.getenv("GROUP_CHAT_IDS", "-1003429834411")
 GROUP_CHAT_IDS = [x.strip() for x in GROUP_CHAT_IDS_STR.split(",") if x.strip()]
 
 # Channel URLs
