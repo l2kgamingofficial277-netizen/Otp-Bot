@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: otp-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8674187481:AAFgQ_5zlcy7TzA9WcfogNYFCcLp0-UarYg
+      - key: DM_CHAT_ID
+        value: "7304865708"
+      - key: ADMIN_IDS
+        value: "7304865708"
+      - key: GROUP_CHAT_IDS
+        value: "-1003008351067"
+      - key: POLLING_INTERVAL
+        value: "5"
+    disk:
+      name: bot-data
+      mountPath: /data
+      sizeGB: 1

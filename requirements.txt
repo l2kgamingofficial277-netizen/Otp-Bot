@@ -1,0 +1,6 @@
+aiogram==3.4.1
+requests==2.31.0
+beautifulsoup4==4.12.3
+phonenumbers==8.13.30
+lxml==4.9.3
+flask==3.0.0
