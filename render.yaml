@@ -14,7 +14,7 @@ services:
       - key: ADMIN_IDS
         value: "7304865708"
       - key: GROUP_CHAT_IDS
-        value: "-1003008351067"
+        value: "-1003429834411"
       - key: POLLING_INTERVAL
         value: "5"
     disk:
