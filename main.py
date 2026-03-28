@@ -1,5 +1,5 @@
 # Premium OTP Bot with Admin Panel, Emoji Flags, aiogram
-# Render 24/7 Compatible Version
+# Render 24/7 Compatible Version - FIXED PATHS
 
 import requests
 from bs4 import BeautifulSoup
@@ -30,7 +30,7 @@ from flask import Flask
 from threading import Thread
 
 # ============================================================
-#  FLASK KEEP ALIVE (For 24/7 UptimeRobot Ping)
+#  FLASK KEEP ALIVE
 # ============================================================
 app = Flask(__name__)
 
@@ -52,13 +52,13 @@ def keep_alive():
     print("[*] Keep-alive server started on port", os.environ.get("PORT", 10000))
 
 # ============================================================
-#  ENVIRONMENT CONFIGURATION (Render Compatible)
+#  ENVIRONMENT CONFIGURATION
 # ============================================================
 BOT_NAME = "OTP Bot"
 USERNAME = os.getenv("API_USERNAME", "faysal91")
 PASSWORD = os.getenv("API_PASSWORD", "faysal91")
 
-# Database path (Render persistent disk or local)
+# Database path
 DB_FILE = os.getenv("DB_FILE", "sms_database_np.db")
 
 # Telegram Config
@@ -69,13 +69,13 @@ DM_CHAT_ID = os.getenv("DM_CHAT_ID", "7304865708")
 ADMIN_IDS_STR = os.getenv("ADMIN_IDS", "7304865708")
 ADMIN_IDS = [int(x.strip()) for x in ADMIN_IDS_STR.split(",") if x.strip()]
 
-# Group Chat IDs (comma separated in env var)
+# Group Chat IDs
 GROUP_CHAT_IDS_STR = os.getenv("GROUP_CHAT_IDS", "-1003429834411")
 GROUP_CHAT_IDS = [x.strip() for x in GROUP_CHAT_IDS_STR.split(",") if x.strip()]
 
 # Channel URLs
-CHANNEL_1 = os.getenv("CHANNEL_1", "https://t.me/your_number_channel")
-CHANNEL_2 = os.getenv("CHANNEL_2", "https://t.me/your_otp_channel")
+CHANNEL_1 = os.getenv("CHANNEL_1", "https://t.me/+zmXyedfina1jYmVl")
+CHANNEL_2 = os.getenv("CHANNEL_2", "https://t.me/+hbM8wsKkgcthMGI1")
 
 # Footer Emoji IDs
 LEFT_FOOTER_EMOJI_ID = os.getenv("LEFT_FOOTER_EMOJI_ID", "6010280017437661523")
@@ -97,35 +97,113 @@ POTENTIAL_API_URLS = [
 ]
 
 # ============================================================
-#  EMOJI DATA
+#  EMOJI DATA - FIXED PATH FOR RENDER
 # ============================================================
-EMOJI_DATA_FILE = os.path.join(os.path.dirname(__file__), "emoji_data.json")
+
+# Try multiple possible paths for emoji_data.json
+def find_emoji_data_file():
+    """Find emoji_data.json in various possible locations"""
+    possible_paths = [
+        # Current directory
+        os.path.join(os.path.dirname(__file__), "emoji_data.json"),
+        # Parent directory (for Render)
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "emoji_data.json"),
+        # Absolute path from root
+        "/opt/render/project/src/emoji_data.json",
+        # Just filename (if in same dir)
+        "emoji_data.json",
+        # In project root
+        "/emoji_data.json",
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"[*] Found emoji_data.json at: {path}")
+            return path
+    
+    # If not found, return default and create it
+    default_path = os.path.join(os.path.dirname(__file__), "emoji_data.json")
+    print(f"[!] emoji_data.json not found, will create at: {default_path}")
+    return default_path
+
+EMOJI_DATA_FILE = find_emoji_data_file()
 SERVICE_EMOJIS: dict = {}
 COUNTRY_EMOJIS: dict = {}
 
+# Default emojis if file not found
+DEFAULT_SERVICE_EMOJIS = {
+    "whatsapp": "5334998226636390258",
+    "telegram": "5330237710655306682",
+    "facebook": "5323261730283863478",
+    "tiktok": "5327982530702359565",
+    "instagram": "5319160079465857105"
+}
+
+DEFAULT_COUNTRY_EMOJIS = {
+    "afganistan": "5222096009009575868",
+    "angola": "5224379767674907895",
+    "benin": "5222024115552009151",
+    "bolivia": "5224675484763170798",
+    "burkina faso": "5222356541725749790",
+    "burundi": "5224490444687158452",
+    "cambodia": "5224189882875785448",
+    "central africa": "5222073662294733523",
+    "cameroon": "5222270788408717651",
+    "egypt": "5222161185138292290",
+    "ethiopia": "5224467805914542024",
+    "georgia": "5222152195771742239",
+    "guatemala": "5222128302868672826",
+    "guinea": "5222337588035073000",
+    "guinea-bissau": "5224705704153066489",
+    "haiti": "5224683146984831315",
+    "honduras": "5222229234600130045",
+    "hungary": "5224691998912427164",
+    "iran": "5224374154152653367",
+    "iraq": "5221980268230882832",
+    "italy": "5222460101977190141",
+    "cote d'ivoire": "5224257017509588818",
+    "lebanon": "5222244425899455269",
+    "libya": "5222194286451242896",
+    "madagascar": "5222042605386217334",
+    "mali": "5224322352552096671",
+    "ghana": "5224511339703056124",
+    "tanzania": "5224397364155923150",
+    "timor-leste": "5224515905253291409",
+    "yemen": "5222300655611294950",
+}
+
 def load_emoji_data():
     global SERVICE_EMOJIS, COUNTRY_EMOJIS
+    
     try:
-        with open(EMOJI_DATA_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        SERVICE_EMOJIS = data.get("service_emojis", {})
-        COUNTRY_EMOJIS = data.get("country_emojis", {})
-        print(f"[*] Loaded {len(SERVICE_EMOJIS)} service emojis, {len(COUNTRY_EMOJIS)} country emojis")
-    except FileNotFoundError:
-        print(f"[!] {EMOJI_DATA_FILE} not found, using defaults")
-        SERVICE_EMOJIS = {
-            "whatsapp": "5334998226636390258",
-            "telegram": "5330237710655306682",
-            "facebook": "5323261730283863478",
-            "tiktok": "5327982530702359565",
-            "instagram": "5319160079465857105"
-        }
-        COUNTRY_EMOJIS = {}
+        if os.path.exists(EMOJI_DATA_FILE):
+            with open(EMOJI_DATA_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            SERVICE_EMOJIS = data.get("service_emojis", {})
+            COUNTRY_EMOJIS = data.get("country_emojis", {})
+            print(f"[*] Loaded {len(SERVICE_EMOJIS)} service emojis, {len(COUNTRY_EMOJIS)} country emojis from file")
+        else:
+            raise FileNotFoundError("emoji_data.json not found")
+            
+    except Exception as e:
+        print(f"[!] Error loading emoji_data.json: {e}")
+        print("[*] Using default emoji values")
+        SERVICE_EMOJIS = DEFAULT_SERVICE_EMOJIS.copy()
+        COUNTRY_EMOJIS = DEFAULT_COUNTRY_EMOJIS.copy()
+        # Save defaults to file for future
+        try:
+            save_emoji_data()
+            print(f"[*] Saved default emojis to: {EMOJI_DATA_FILE}")
+        except Exception as save_e:
+            print(f"[!] Could not save default emojis: {save_e}")
 
 def save_emoji_data():
     data = {"service_emojis": SERVICE_EMOJIS, "country_emojis": COUNTRY_EMOJIS}
-    with open(EMOJI_DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    try:
+        with open(EMOJI_DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"[!] Error saving emoji data: {e}")
 
 load_emoji_data()
 
@@ -181,8 +259,12 @@ def detect_country_and_service(phone: str, message: str):
             eid = COUNTRY_EMOJIS.get(country_key)
             if eid:
                 country_emoji = get_custom_emoji_tag(eid)
+            else:
+                print(f"[!] No emoji found for country: {country_key} (region: {region_code})")
+        else:
+            print(f"[!] No country mapping for region: {region_code}")
     except Exception as e:
-        pass
+        print(f"[!] Phone parse error: {e}")
 
     service_emoji = None
     msg_lower = message.lower()
@@ -229,7 +311,6 @@ def build_message_and_keyboard(recipient_number: str, sender_name: str,
         f"{left_emoji} POWERED BY <a href=\"{FAYSAL_PROFILE_URL}\"><b>FAYSAL</b></a> {right_emoji}"
     )
 
-    # Build keyboard
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(
@@ -314,13 +395,18 @@ async def cb_status(call: CallbackQuery):
         await call.answer("Not authorized!", show_alert=True)
         return
     
+    # Check emoji data status
+    emoji_status = "✅" if COUNTRY_EMOJIS else "❌"
+    service_status = "✅" if SERVICE_EMOJIS else "❌"
+    
     status_text = (
         f"📊 <b>Bot Status</b>\n\n"
         f"🟢 Database: {'Connected' if db_connection else 'Disconnected'}\n"
         f"📱 Groups: {len(GROUP_CHAT_IDS)}\n"
         f"👮 Admins: {len(ADMIN_IDS)}\n"
-        f"🎨 Services: {len(SERVICE_EMOJIS)}\n"
-        f"🌍 Countries: {len(COUNTRY_EMOJIS)}\n"
+        f"🎨 Services: {len(SERVICE_EMOJIS)} {service_status}\n"
+        f"🌍 Countries: {len(COUNTRY_EMOJIS)} {emoji_status}\n"
+        f"📁 Emoji File: {EMOJI_DATA_FILE}\n"
         f"⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     )
     await call.message.answer(status_text, parse_mode="HTML")
@@ -449,7 +535,6 @@ telegram_sender = TelegramSender(stop_event)
 def setup_database() -> bool:
     global db_connection, reported_sms_hashes_cache
     try:
-        # Ensure directory exists
         db_dir = os.path.dirname(DB_FILE)
         if db_dir and not os.path.exists(db_dir):
             os.makedirs(db_dir)
@@ -509,7 +594,7 @@ def solve_math_captcha(captcha_text: str):
 # ============================================================
 def start_watching_sms(session: requests.Session, destination_chat_ids: list):
     global working_api_url
-    polling_interval = int(os.getenv("POLLING_INTERVAL", "5"))  # seconds
+    polling_interval = int(os.getenv("POLLING_INTERVAL", "5"))
 
     print(f"[SUCCESS] Watching SMS → {len(destination_chat_ids)} group(s).")
     print(f"[*] Polling interval: {polling_interval}s")
@@ -604,7 +689,6 @@ async def run_bot():
     await dp.start_polling(bot)
 
 def main():
-    # Start keep-alive server first
     keep_alive()
     
     signal.signal(signal.SIGINT, graceful_shutdown)
@@ -612,14 +696,15 @@ def main():
     print("=" * 60)
     print("--- SPEEDX OTP Bot (Render 24/7 Edition) ---")
     print("=" * 60)
-    print(f"[*] Version: 2.0")
+    print(f"[*] Version: 2.1 - Emoji Fix")
     print(f"[*] Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[*] Working Directory: {os.getcwd()}")
+    print(f"[*] Files: {os.listdir('.')}")
 
     if not setup_database():
         print("[!!!] Database setup failed. Exiting.")
         return
 
-    # Start aiogram bot in separate thread
     def _bot_thread():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -681,6 +766,7 @@ def main():
                     "✅ *SPEEDX OTP Bot Started*\\n\\n"
                     f"🟢 Status: Online\\n"
                     f"📊 Groups: {len(GROUP_CHAT_IDS)}\\n"
+                    f"🎨 Emojis: {len(SERVICE_EMOJIS)} services, {len(COUNTRY_EMOJIS)} countries\\n"
                     f"⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                 )
                 start_watching_sms(session, GROUP_CHAT_IDS)
